@@ -50,8 +50,9 @@ class PostURLTests(TestCase):
                 kwargs={'post_id': self.post.id})
         }
         for page in pages:
-            response = self.guest_client.get(page)
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            with self.subTest(page=page):
+                response = self.guest_client.get(page)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_authorized_client(self):
         """Доступ авторизованного пользователя"""
@@ -60,31 +61,30 @@ class PostURLTests(TestCase):
                 'posts:post_create'),
             reverse(
                 'posts:post_edit',
-                kwargs={'post_id': self.post.id})
+                kwargs={'post_id': self.post.id}),
+            reverse(
+                'posts:follow_index')
         }
         for page in pages:
-            response = self.post_author.get(page)
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            with self.subTest(page=page):
+                response = self.post_author.get(page)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_redirect_guest_client(self):
         """Редирект неавторизованного пользователя"""
-        url1 = '/auth/login/?next=/create/'
-        url2 = f'/auth/login/?next=/posts/{self.post.id}/edit/'
         pages = {
             reverse(
-                'posts:post_create'): url1,
+                'posts:post_create'): '/auth/login/?next=/create/',
             reverse(
                 'posts:post_edit',
-                kwargs={'post_id': self.post.id}): url2,
+                kwargs={'post_id': self.post.id}):
+                    f'/auth/login/?next=/posts/{self.post.id}/edit/',
+            reverse(
+                'posts:follow_index'): '/auth/login/?next=/follow/'
         }
         for page, value in pages.items():
             response = self.guest_client.get(page, follow=True)
             self.assertRedirects(response, value)
-
-    def test_unexisting_page(self):
-        """Несуществующая страница выдаёт ошибку."""
-        response = self.guest_client.get('/unexisting_page/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -104,7 +104,9 @@ class PostURLTests(TestCase):
                 'posts:post_create'): 'posts/create.html',
             reverse(
                 'posts:post_edit',
-                kwargs={'post_id': self.post.id}): 'posts/create.html'
+                kwargs={'post_id': self.post.id}): 'posts/create.html',
+            reverse(
+                'posts:follow_index'): 'posts/follow.html'
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):

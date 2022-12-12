@@ -7,9 +7,9 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from posts.models import Comment, Group, Post
 
 from ..forms import PostForm
+from ..models import Comment, Group, Post
 
 User = get_user_model()
 
@@ -141,28 +141,35 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True,
         )
-        response_guest = self.guest_client.post(
-            reverse(
-                "posts:add_comment", kwargs={"post_id": str(self.post.id)}
-            ),
-            data=form_data,
-            follow=True,
-        )
         self.assertRedirects(
             response,
             reverse(
-                "posts:post_detail", kwargs={"post_id": str(self.post.id)})
-        )
-        self.assertRedirects(
-            response_guest,
-            '/auth/login/?next=' + reverse(
-                "posts:add_comment", kwargs={"post_id": str(self.post.id)})
+                'posts:post_detail', kwargs={'post_id': self.post.id})
         )
         self.assertEqual(
             Comment.objects.filter(post=self.post).count(), comments_count + 1
         )
         self.assertTrue(
             Comment.objects.filter(
-                post=self.post, text='Тестовый коментарий'
+                post=self.post, text=form_data['text'], author=self.user
             ).exists()
         )
+
+    def test_authorized_user_create_comment(self):
+        """Проверка создания коментария не авторизированным клиентом."""
+        comments_count = Comment.objects.count()
+        form_data = {'text': 'Тестовый коментарий'}
+        response = self.guest_client.post(
+            reverse(
+                'posts:add_comment', kwargs={'post_id': self.post.id}
+            ),
+            data=form_data,
+            follow=True,
+        )
+        self.assertRedirects(
+            response,
+            '/auth/login/?next=' + reverse(
+                "posts:add_comment", kwargs={"post_id": str(self.post.id)})
+        )
+        self.assertEqual(
+            Comment.objects.filter(post=self.post).count(), comments_count)

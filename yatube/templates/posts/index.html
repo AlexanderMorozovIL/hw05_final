@@ -8,12 +8,12 @@
     <h1>Последние обновления на сайте</h1>
     {% load cache %}
     {% cache 20 index_page %}
-    {% for post in page_obj %}
-      {% include "includes/post.html" with group_link=True author=True %}
-      {% if not forloop.last %}
-        <hr>
-      {% endif %}
-    {% endfor %}
+      {% for post in page_obj %}
+        {% include "includes/post.html" with group_link=True author=True %}
+        {% if not forloop.last %}
+          <hr>
+        {% endif %}
+      {% endfor %}
     {% endcache %}
     {% include 'posts/includes/paginator.html' %}
   </div>

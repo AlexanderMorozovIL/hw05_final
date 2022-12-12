@@ -34,13 +34,13 @@
       <p>
         {% include 'includes/image.html' %}
         {{ post.text|linebreaksbr }}
-        {% include 'includes/comment.html' %}
       </p>
-      {% if user == post.author %}
-        <a class="btn btn-primary" href="{% url "posts:post_edit" post.id %}">
-          редактировать запись
-        </a>
-      {% endif %}
     </article>
+    {% if user == post.author %}
+      <a class="btn btn-primary" href="{% url "posts:post_edit" post.id %}">
+        редактировать запись
+      </a>
+    {% endif %}
+    {% include 'includes/comment.html' %}
   </div>
 {% endblock %}

@@ -57,6 +57,7 @@ class PostPagesTests(TestCase):
             reverse('posts:post_create'): 'posts/create.html',
             reverse('posts:post_edit', kwargs={'post_id': cls.post.id}):
             'posts/create.html',
+            reverse('posts:follow_index'): 'posts/follow.html',
         }
 
     @classmethod
@@ -73,7 +74,7 @@ class PostPagesTests(TestCase):
     def check_post_info(self, post):
         self.assertEqual(post.text, self.post.text)
         self.assertEqual(post.author, self.post.author)
-        self.assertEqual(post.group.id, self.post.group.id)
+        self.assertEqual(post.group, self.post.group)
         self.assertEqual(post.image, self.post.image)
 
     def test_views_correct_template(self):
@@ -110,13 +111,20 @@ class PostPagesTests(TestCase):
         self.assertEqual(response.context['author'], self.user)
         self.check_post_info(response.context['page_obj'][0])
 
-    def test_detail_page_show_correct_context(self):
+    def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse(
                 'posts:post_detail',
                 kwargs={'post_id': self.post.id}))
+        form_fields = {
+            'text': forms.fields.CharField,
+        }
         self.check_post_info(response.context['post'])
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response.context['form'].fields[value]
+                self.assertIsInstance(form_field, expected)
 
     def test_post_edit_show_correct_context(self):
         """Шаблон create / edit сформирован с правильным контекстом."""
@@ -128,7 +136,8 @@ class PostPagesTests(TestCase):
                 'posts:post_create')}
         form_fields = {
             'text': forms.fields.CharField,
-            'group': forms.fields.ChoiceField
+            'group': forms.fields.ChoiceField,
+            'image': forms.fields.ImageField
         }
         for page in pages:
             with self.subTest(page=page):
