@@ -38,11 +38,13 @@
             </li>
           {% else %}
             <li class="nav-item">
-              <a class="nav-link link-light {% if view_name  == 'users:login' %}active{% endif %}"
+              <a class="nav-link link-light
+                {% if view_name  == 'users:login' %}active{% endif %}"
                 href="{% url 'users:login' %}">Войти</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link link-light {% if view_name  == 'users:signup' %}active{% endif %}"
+              <a class="nav-link link-light
+                {% if view_name  == 'users:signup' %}active{% endif %}"
                 href="{% url 'users:signup' %}">Регистрация</a>
             </li>
           {% endif %}

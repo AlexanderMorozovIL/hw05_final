@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CommentForm, PostForm
-from .models import Comment, Follow, Group, Post
+from .models import Follow, Group, Post
 from .utils import split_page_to_page_pagination
 
 User = get_user_model()
@@ -42,9 +42,8 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('author', 'group')
     page_obj = split_page_to_page_pagination(request, posts)
-    following = request.user.is_authenticated
-    if following:
-        following = author.following.filter(user=request.user).exists()
+    following = (request.user.is_authenticated
+                 and author.following.filter(user=request.user).exists())
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -58,7 +57,7 @@ def post_detail(request, post_id):
     template = 'posts/post_detail.html'
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm()
-    comments = Comment.objects.filter(post=post)
+    comments = post.comments.select_related('post', 'author')
     context = {
         'post': post,
         'form': form,
